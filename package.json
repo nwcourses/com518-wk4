@@ -4,5 +4,9 @@
     "express": "^4.21.2",
     "vite": "^6.2.2",
     "vite-express": "^0.20.0"
+  },
+  "scripts": {
+    "dev": "node server.mjs",
+    "build" : "vite build"
   }
 }
