@@ -12,6 +12,8 @@
 import express from 'express';
 import Database from 'better-sqlite3';
 import ViteExpress from 'vite-express';
+import expressSession from 'express-session';
+import betterSqlite3Session from 'express-session-better-sqlite3';
 
 // Create our Express server.
 const app = express();
@@ -24,6 +26,55 @@ app.use(express.static('public'));
 
 // Load the database. You may need to change the path.
 const db = new Database("wadsongs.db");
+
+const sessDb = new Database("session.db");
+const SqliteStore = betterSqlite3Session(expressSession, sessDb);
+
+app.use(expressSession({
+    store: new SqliteStore(), 
+    secret: 'BinnieAndClyde', 
+    resave: true, 
+    saveUninitialized: false, 
+    rolling: true, 
+    unset: 'destroy', 
+    proxy: true, 
+    cookie: { 
+        maxAge: 600000, // 600000 ms = 10 mins expiry time
+        httpOnly: false // allow client-side code to access the cookie, otherwise it's kept to the HTTP messages
+    }
+}));
+
+app.post('/login', (req, res) => {
+    const stmt = db.prepare("SELECT * FROM ht_users WHERE username=? AND password=?");
+    const row = stmt.get(req.body.username, req.body.password);
+    if(row) {
+        req.session.username = req.body.username;
+        res.json({username: req.body.username});
+    } else {
+        res.status(401).json({error: "Invalid login!"});
+    }
+});
+
+app.get('/login', (req, res) => {
+    res.json({username : req.session.username || null});
+});
+
+app.post('/logout', (req, res) => {
+    req.session = null;
+    res.json({loggedout: true});
+});
+
+app.use((req, res, next) => {
+    if(["POST", "PUT", "DELETE"].indexOf(req.method) == -1) {
+        next();
+    } else {
+        if(req.session.username) {
+            next();
+        } else {
+            res.status(401).json({error: "You're not logged in. Go away!"});
+        }
+    }
+});
 
 // Search by artist
 app.get('/artist/:artist', (req, res) => {

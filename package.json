@@ -2,11 +2,13 @@
   "dependencies": {
     "better-sqlite3": "^11.9.0",
     "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "express-session-better-sqlite3": "^1.2.1",
     "vite": "^6.2.2",
     "vite-express": "^0.20.0"
   },
   "scripts": {
     "dev": "node server.mjs",
-    "build" : "vite build"
+    "build": "vite build"
   }
 }
